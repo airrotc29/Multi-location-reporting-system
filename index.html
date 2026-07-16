@@ -36,6 +36,8 @@ h1, h2, h3, h4{color:#16233c;}
 .rpt-btn--outline:hover{background:#eef2fc;}
 .rpt-btn--danger-outline{background:#fff;color:#c0392b !important;border-color:#c0392b;}
 .rpt-btn--danger-outline:hover{background:#fdeceb;}
+.rpt-file-btn{display:inline-block;padding:.55em 1.1em;border-radius:8px;font-weight:700;font-size:.88rem;background:#fff;color:#2148b8;border:2px solid #2148b8;cursor:pointer;}
+.rpt-file-btn:hover{background:#eef2fc;}
 .rpt-btn--small{padding:.35em .75em;font-size:.8rem;}
 .rpt-toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:1rem;}
 .rpt-note{font-size:.85rem;color:#5a6577;margin-left:.6rem;}
@@ -214,6 +216,11 @@ body.report-preview-open .report-print-area{
       <div class="rpt-grid">
         <label>기준일<input type="date" id="baseDate"></label>
       </div>
+      <div class="rpt-toolbar">
+        <button type="button" id="btnDownloadTemplate" class="rpt-btn rpt-btn--outline">📥 엑셀 서식 다운로드</button>
+        <label class="rpt-file-btn">📤 엑셀 업로드<input type="file" id="excelUploadInput" accept=".xlsx,.xls" style="display:none;"></label>
+        <span id="excelImportNote" class="rpt-note"></span>
+      </div>
       <div class="rpt-table-wrap">
         <table class="rpt-table" id="rowsTable">
           <thead><tr><th style="width:90px;">호실</th><th>업체명</th><th style="width:100px;">미납개월(총)</th><th style="width:130px;">부과금액</th><th style="width:120px;">미납연체료</th><th style="width:130px;">미납금액</th><th>조치 및 납부계획</th><th style="width:40px;"></th></tr></thead>
@@ -266,6 +273,7 @@ body.report-preview-open .report-print-area{
 <p class="site-footer">© 본사 관리 시스템</p>
 </div>
 
+<script src="assets/js/xlsx.core.min.js"></script>
 <script>
 (function(){
 'use strict';
@@ -374,6 +382,101 @@ function recalcTotals(){
   $('sumCharged').textContent = fmtNum(charged);
   $('sumOverdue').textContent = fmtNum(overdue);
   $('sumUnpaid').textContent = fmtNum(unpaid);
+}
+
+/* ================= 엑셀 서식 다운로드 / 대량 업로드 ================= */
+var TEMPLATE_HEADERS = ['호실','업체명','미납개월(총)','부과금액','미납연체료','조치 및 납부계획'];
+var IMPORT_CANDIDATES = {
+  unit: ['호실','호수'],
+  company: ['업체명','업체','상호'],
+  unpaidMonths: ['미납개월','미납 개월','개월'],
+  chargedAmount: ['부과금액','부과'],
+  overdueFee: ['미납연체료','연체료'],
+  actionPlan: ['조치및납부계획','조치','납부계획','비고'],
+};
+
+function downloadTemplate(){
+  var sample = ['301','주식회사 위트루',3,1712950,72370,'무료주차제한 및 독촉장발송'];
+  var ws = XLSX.utils.aoa_to_sheet([TEMPLATE_HEADERS, sample]);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '장기미납세대');
+  XLSX.writeFile(wb, '사업소_장기미납세대_현황_서식.xlsx');
+}
+
+function findKey(sampleRow, candidates){
+  return Object.keys(sampleRow).find(function(k){
+    var norm = String(k).replace(/\s/g,'');
+    return candidates.some(function(c){ return norm.indexOf(c.replace(/\s/g,'')) !== -1; });
+  });
+}
+
+// 엑셀에 제목 줄이 열 제목 위에 있는 경우가 많아, 후보 키워드가 가장 많이 매칭되는 줄을 열 제목 줄로 판단한다
+function findHeaderRowIndex(aoa){
+  var allCandidates = [];
+  Object.keys(IMPORT_CANDIDATES).forEach(function(key){ allCandidates = allCandidates.concat(IMPORT_CANDIDATES[key]); });
+  var bestIdx = 0, bestScore = 0;
+  var scanLimit = Math.min(aoa.length, 15);
+  for(var i = 0; i < scanLimit; i++){
+    var score = 0;
+    (aoa[i] || []).forEach(function(cell){
+      var norm = String(cell==null?'':cell).replace(/\s/g,'');
+      if(!norm) return;
+      if(allCandidates.some(function(c){ return norm.indexOf(c.replace(/\s/g,'')) !== -1; })) score++;
+    });
+    if(score > bestScore){ bestScore = score; bestIdx = i; }
+  }
+  return bestIdx;
+}
+
+function aoaToRows(aoa, headerIdx){
+  var headerRow = aoa[headerIdx] || [];
+  var headers = headerRow.map(function(h, idx){ return String(h==null?'':h).trim() || ('열'+(idx+1)); });
+  var rows = aoa.slice(headerIdx+1).filter(function(r){
+    return (r||[]).some(function(c){ return String(c==null?'':c).trim() !== ''; });
+  }).map(function(r){
+    var obj = {};
+    headers.forEach(function(h, idx){ obj[h] = (r[idx] !== undefined && r[idx] !== null) ? r[idx] : ''; });
+    return obj;
+  });
+  return { headers: headers, rows: rows };
+}
+
+async function handleExcelUpload(file){
+  var buf = await file.arrayBuffer();
+  var workbook = XLSX.read(new Uint8Array(buf), {type:'array', cellDates:true});
+  var sheet = workbook.Sheets[workbook.SheetNames[0]];
+  var aoa = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+  if(!aoa.length){ alert('엑셀에서 표 형태의 데이터를 찾지 못했습니다.'); return; }
+  var headerIdx = findHeaderRowIndex(aoa);
+  var parsed = aoaToRows(aoa, headerIdx);
+  if(!parsed.rows.length){ alert('엑셀에서 표 형태의 데이터를 찾지 못했습니다.'); return; }
+
+  var detected = {};
+  Object.keys(IMPORT_CANDIDATES).forEach(function(key){ detected[key] = findKey(parsed.rows[0], IMPORT_CANDIDATES[key]); });
+  if(!detected.unit && !detected.company){
+    alert('호실 또는 업체명 열을 찾지 못했습니다. 다운로드한 서식에 맞춰 작성했는지 확인해주세요.');
+    return;
+  }
+
+  var mapped = parsed.rows.map(function(r){
+    return {
+      unit: detected.unit ? String(r[detected.unit]||'').trim() : '',
+      company: detected.company ? String(r[detected.company]||'').trim() : '',
+      unpaidMonths: detected.unpaidMonths ? String(r[detected.unpaidMonths]||'').trim() : '',
+      chargedAmount: detected.chargedAmount ? String(r[detected.chargedAmount]||'').trim() : '',
+      overdueFee: detected.overdueFee ? String(r[detected.overdueFee]||'').trim() : '',
+      actionPlan: detected.actionPlan ? String(r[detected.actionPlan]||'').trim() : '',
+    };
+  }).filter(function(r){ return r.unit || r.company; });
+
+  if(!mapped.length){ alert('가져올 수 있는 세대 정보가 없습니다.'); return; }
+  if(!confirm('현재 입력된 표는 모두 지워지고, 엑셀에서 읽은 ' + mapped.length + '건으로 교체됩니다. 계속하시겠습니까?')) return;
+
+  document.querySelector('#rowsTable tbody').innerHTML = '';
+  mapped.forEach(function(row){ addRow(row); });
+  recalcTotals();
+  $('excelImportNote').textContent = mapped.length + '건을 불러왔습니다. 내용을 확인한 뒤 본사로 보고해주세요.';
+  setTimeout(function(){ $('excelImportNote').textContent=''; }, 5000);
 }
 
 function resetReportForm(){
@@ -713,6 +816,10 @@ function init(){
   $('btnCreateNotice').addEventListener('click', createNotice);
   $('btnAddRow').addEventListener('click', function(){ addRow(); });
   $('btnSubmitReport').addEventListener('click', submitReport);
+  $('btnDownloadTemplate').addEventListener('click', downloadTemplate);
+  $('excelUploadInput').addEventListener('change', function(e){
+    if(e.target.files[0]) handleExcelUpload(e.target.files[0]).then(function(){ e.target.value=''; });
+  });
 
   document.querySelector('#rowsTable tbody').addEventListener('input', recalcTotals);
   document.querySelector('#rowsTable tbody').addEventListener('click', function(e){
