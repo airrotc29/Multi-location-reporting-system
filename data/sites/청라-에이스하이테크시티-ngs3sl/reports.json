@@ -1,1 +1,67 @@
-[]
+[
+  {
+    "id": 1,
+    "baseDate": "2026-07-16",
+    "rows": [
+      {
+        "unit": "301",
+        "company": "주식회사 위트루",
+        "unpaidMonths": 3,
+        "chargedAmount": 1712950,
+        "overdueFee": 72370,
+        "unpaidAmount": 1785320,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      },
+      {
+        "unit": "302",
+        "company": "주식회사 위트루1",
+        "unpaidMonths": 3,
+        "chargedAmount": 1712951,
+        "overdueFee": 72370,
+        "unpaidAmount": 1785321,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      },
+      {
+        "unit": "303",
+        "company": "주식회사 위트루2",
+        "unpaidMonths": 3,
+        "chargedAmount": 1712952,
+        "overdueFee": 72370,
+        "unpaidAmount": 1785322,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      },
+      {
+        "unit": "304",
+        "company": "주식회사 위트루3",
+        "unpaidMonths": 3,
+        "chargedAmount": 1712953,
+        "overdueFee": 72370,
+        "unpaidAmount": 1785323,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      },
+      {
+        "unit": "305",
+        "company": "주식회사 위트루4",
+        "unpaidMonths": 3,
+        "chargedAmount": 1712954,
+        "overdueFee": 72370,
+        "unpaidAmount": 1785324,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      }
+    ],
+    "totals": {
+      "chargedAmount": 8564760,
+      "overdueFee": 361850,
+      "unpaidAmount": 8926610,
+      "unitCount": 5
+    },
+    "note": "지급명령 하겠음",
+    "approvers": {
+      "staff": "",
+      "manager": "",
+      "chief": ""
+    },
+    "submittedAt": "2026-07-16T04:14:42.769Z",
+    "submittedBy": "청라"
+  }
+]
