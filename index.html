@@ -53,6 +53,7 @@ h1, h2, h3, h4{color:#16233c;}
 .rpt-table th{background:#f3f6fd;white-space:nowrap;}
 .rpt-table tfoot td{background:#f3f6fd;font-weight:700;}
 .rpt-table input[type=text],.rpt-table input[type=number]{width:100%;border:1px solid #cfd7e6;border-radius:5px;padding:.3em .4em;font-size:.85rem;font-family:inherit;}
+.rpt-table input[readonly]{background:#f3f6fd;color:#33415c;font-weight:700;}
 
 .rpt-stat-grid{display:flex;flex-wrap:wrap;gap:1rem;margin:.8rem 0 1.2rem;}
 .rpt-stat{border:1px solid #e3e8f2;border-radius:10px;padding:.8rem 1.2rem;min-width:150px;background:#fafbfd;}
@@ -227,11 +228,6 @@ body.report-preview-open .report-print-area{
       <div class="rpt-grid" style="margin-top:1rem;">
         <label class="rpt-span2">본사 참고보고 사항<textarea id="reportNote" rows="2" placeholder="본사에 함께 전달할 특이사항이 있으면 입력하세요"></textarea></label>
       </div>
-      <div class="rpt-grid">
-        <label>담당<input type="text" id="apStaff"></label>
-        <label>과장<input type="text" id="apManager"></label>
-        <label>소장<input type="text" id="apChief"></label>
-      </div>
       <button type="button" id="btnSubmitReport" class="rpt-btn rpt-btn--solid" style="margin-top:.6rem;">본사로 보고하기</button>
       <span id="submitReportNote" class="rpt-note"></span>
     </section>
@@ -342,7 +338,7 @@ function addRow(row){
     '<td><input type="number" data-f="unpaidMonths" value="'+(row.unpaidMonths||'')+'" min="0"></td>' +
     '<td><input type="number" data-f="chargedAmount" value="'+(row.chargedAmount||'')+'" min="0"></td>' +
     '<td><input type="number" data-f="overdueFee" value="'+(row.overdueFee||'')+'" min="0"></td>' +
-    '<td><input type="number" data-f="unpaidAmount" value="'+(row.unpaidAmount||'')+'" min="0"></td>' +
+    '<td><input type="number" data-f="unpaidAmount" value="'+((Number(row.chargedAmount)||0)+(Number(row.overdueFee)||0))+'" readonly tabindex="-1"></td>' +
     '<td><input type="text" data-f="actionPlan" value="'+escapeHtml(row.actionPlan||'')+'"></td>' +
     '<td><button type="button" class="rpt-btn rpt-btn--danger-outline rpt-btn--small act-remove-row">삭제</button></td>';
   tbody.appendChild(tr);
@@ -362,6 +358,12 @@ function readRows(){
 }
 
 function recalcTotals(){
+  document.querySelectorAll('#rowsTable tbody tr').forEach(function(tr){
+    var chargedInput = tr.querySelector('[data-f="chargedAmount"]');
+    var overdueInput = tr.querySelector('[data-f="overdueFee"]');
+    var unpaidInput = tr.querySelector('[data-f="unpaidAmount"]');
+    unpaidInput.value = (Number(chargedInput.value)||0) + (Number(overdueInput.value)||0);
+  });
   var rows = readRows();
   var charged = 0, overdue = 0, unpaid = 0;
   rows.forEach(function(r){
@@ -379,7 +381,6 @@ function resetReportForm(){
   addRow(); addRow(); addRow();
   $('baseDate').value = todayStr();
   $('reportNote').value = '';
-  $('apStaff').value=''; $('apManager').value=''; $('apChief').value='';
   recalcTotals();
 }
 
@@ -392,8 +393,7 @@ async function submitReport(){
   $('btnSubmitReport').disabled = true;
   try{
     await apiFetch('/api/site/reports', { method:'POST', body:{
-      baseDate: baseDate, rows: rows, note: $('reportNote').value,
-      approvers: { staff: $('apStaff').value, manager: $('apManager').value, chief: $('apChief').value }
+      baseDate: baseDate, rows: rows, note: $('reportNote').value
     }});
     $('submitReportNote').textContent = '본사에 보고되었습니다.';
     resetReportForm();
@@ -431,7 +431,6 @@ function buildReportHtml(siteName, report){
       '<td>'+fmtNum(r.chargedAmount)+'</td><td>'+fmtNum(r.overdueFee)+'</td><td>'+fmtNum(r.unpaidAmount)+'</td>'+
       '<td style="text-align:left;">'+escapeHtml(r.actionPlan)+'</td></tr>';
   }).join('');
-  var ap = report.approvers || {};
   return '<div class="report-page">' +
     '<h1>사업소 장기미납세대 현황</h1>' +
     '<div class="report-meta"><span>사업소: '+escapeHtml(siteName||'')+'</span><span>기준일: '+escapeHtml(report.baseDate||'')+'</span></div>' +
@@ -440,10 +439,6 @@ function buildReportHtml(siteName, report){
     '<tfoot><tr><td colspan="3">합계</td><td>'+fmtNum(report.totals.chargedAmount)+'</td><td>'+fmtNum(report.totals.overdueFee)+'</td><td>'+fmtNum(report.totals.unpaidAmount)+'</td><td></td></tr></tfoot>' +
     '</table>' +
     (report.note ? '<p><strong>본사 참고보고 사항:</strong><br>'+escapeHtml(report.note).replace(/\n/g,'<br>')+'</p>' : '') +
-    '<table class="report-table" style="max-width:420px;margin-top:1.5rem;">' +
-    '<thead><tr><th rowspan="2" style="width:40px;">결재</th><th>담당</th><th>과장</th><th>소장</th></tr>' +
-    '<tr><td style="height:2.6rem;">'+escapeHtml(ap.staff||'')+'</td><td>'+escapeHtml(ap.manager||'')+'</td><td>'+escapeHtml(ap.chief||'')+'</td></tr></thead>' +
-    '</table>' +
   '</div>';
 }
 

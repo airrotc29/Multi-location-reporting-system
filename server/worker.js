@@ -317,13 +317,15 @@ async function handleSubmitReport(env, request) {
   var incomingRows = Array.isArray(body.rows) ? body.rows : [];
   if (!baseDate) return errorResponse(env, '기준일을 입력하세요.', 400);
   var rows = incomingRows.map(function (r) {
+    var chargedAmount = toNumber(r.chargedAmount);
+    var overdueFee = toNumber(r.overdueFee);
     return {
       unit: String(r.unit || '').trim(),
       company: String(r.company || '').trim(),
       unpaidMonths: toNumber(r.unpaidMonths),
-      chargedAmount: toNumber(r.chargedAmount),
-      overdueFee: toNumber(r.overdueFee),
-      unpaidAmount: toNumber(r.unpaidAmount),
+      chargedAmount: chargedAmount,
+      overdueFee: overdueFee,
+      unpaidAmount: chargedAmount + overdueFee, // 부과금액 + 미납연체료로 항상 서버에서 재계산
       actionPlan: String(r.actionPlan || '').trim(),
     };
   }).filter(function (r) { return r.unit || r.company; });
@@ -337,11 +339,6 @@ async function handleSubmitReport(env, request) {
     rows: rows,
     totals: computeReportTotals(rows),
     note: String(body.note || ''),
-    approvers: {
-      staff: String((body.approvers && body.approvers.staff) || ''),
-      manager: String((body.approvers && body.approvers.manager) || ''),
-      chief: String((body.approvers && body.approvers.chief) || ''),
-    },
     submittedAt: new Date().toISOString(),
     submittedBy: auth.uid,
   };
