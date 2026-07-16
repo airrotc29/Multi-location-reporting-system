@@ -115,6 +115,19 @@ body.report-preview-open .report-print-area{
     <span id="loginError" class="rpt-warn"></span>
     <p class="rpt-desc">계정은 본사 관리자가 발급합니다. 아이디/비밀번호를 모르면 본사에 문의하세요.</p>
   </section>
+
+  <section class="rpt-card rpt-login-card">
+    <details>
+      <summary style="cursor:pointer;font-weight:700;">최초 설정 — 본사 관리자 계정이 아직 없다면</summary>
+      <p class="rpt-desc" style="margin-top:.8rem;">이 시스템을 처음 배포한 경우, 아래에서 본사 관리자 계정을 딱 한 번만 만들 수 있습니다. 이미 계정이 있다면 이 단계는 필요 없습니다.</p>
+      <div class="rpt-grid">
+        <label>관리자 아이디<input type="text" id="bootstrapId" autocomplete="off" value="admin"></label>
+        <label>관리자 비밀번호<input type="password" id="bootstrapPw" autocomplete="new-password"></label>
+      </div>
+      <button type="button" id="btnBootstrapAdmin" class="rpt-btn rpt-btn--outline">관리자 계정 생성</button>
+      <span id="bootstrapNote" class="rpt-note"></span>
+    </details>
+  </section>
 </div>
 
 <!-- ================= 관리자(본사) 화면 ================= -->
@@ -639,6 +652,29 @@ function logout(){
   showLoginView();
 }
 
+async function bootstrapAdmin(){
+  var id = $('bootstrapId').value.trim();
+  var password = $('bootstrapPw').value;
+  $('bootstrapNote').textContent = '';
+  if(!id || !password){ $('bootstrapNote').textContent = '아이디와 비밀번호를 입력하세요.'; return; }
+  $('btnBootstrapAdmin').disabled = true;
+  try{
+    var res = await fetch(API_BASE + '/api/bootstrap-admin', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id:id, password:password })
+    });
+    var data = await res.json().catch(function(){ return {}; });
+    if(!res.ok) throw new Error(data.error || '생성에 실패했습니다.');
+    $('bootstrapNote').textContent = '관리자 계정이 생성되었습니다. 위 로그인 폼에서 로그인해주세요.';
+    $('loginId').value = id;
+    $('bootstrapPw').value = '';
+  } catch(e){
+    $('bootstrapNote').textContent = '실패: ' + e.message;
+  } finally {
+    $('btnBootstrapAdmin').disabled = false;
+  }
+}
+
 /* ---------- 화면 전환 ---------- */
 function showLoginView(){
   $('loginScreen').style.display = 'block';
@@ -669,6 +705,7 @@ async function showLoggedInView(){
 function init(){
   $('btnLogin').addEventListener('click', login);
   $('loginPw').addEventListener('keydown', function(e){ if(e.key === 'Enter') login(); });
+  $('btnBootstrapAdmin').addEventListener('click', bootstrapAdmin);
   $('btnLogout').addEventListener('click', logout);
   $('btnLogoutAdmin').addEventListener('click', logout);
   $('btnCloseModal').addEventListener('click', closeModal);
