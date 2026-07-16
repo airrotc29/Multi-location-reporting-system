@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ko-KR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>사업소 장기미납세대 현황 보고 시스템</title>
+<meta name="description" content="본사가 사업소 계정을 발급하고, 사업소는 장기미납세대 현황을 보고하며, 본사는 통계로 확인하고 지시사항을 내리는 시스템">
+<style>
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;
+  background:#f5f7fb; color:#16233c; line-height:1.6; word-break:keep-all; overflow-wrap:break-word;
+}
+.page-wrap{max-width:1080px; margin:0 auto; padding:2rem 1.2rem 4rem;}
+h1{font-size:1.7rem; margin:0 0 .3rem;}
+h1, h2, h3, h4{color:#16233c;}
+.site-footer{text-align:center; color:#8b96a8; font-size:.85rem; padding:2.5rem 1rem 1rem;}
+
+.rpt-app{margin-top:1.5rem;}
+.rpt-login-card{max-width:420px;margin:0 auto;}
+.rpt-card{background:#fff;border:1px solid #e3e8f2;border-radius:12px;padding:1.3rem 1.4rem;margin-bottom:1.4rem;box-shadow:0 2px 10px rgba(20,30,60,.04);}
+.rpt-card h3{margin-top:0;}
+.rpt-desc{color:#5a6577;font-size:.92rem;margin:.3rem 0 .8rem;}
+.rpt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem;margin-bottom:.9rem;}
+.rpt-grid label{display:flex;flex-direction:column;gap:.35rem;font-size:.88rem;font-weight:600;color:#33415c;}
+.rpt-span2{grid-column:1/-1;}
+.rpt-grid input[type=text],.rpt-grid input[type=date],.rpt-grid input[type=password],.rpt-grid input[type=number],.rpt-grid select,.rpt-grid textarea{
+  font-weight:400;padding:.5rem .6rem;border:1px solid #cfd7e6;border-radius:7px;font-size:.92rem;font-family:inherit;
+}
+.rpt-grid textarea{width:100%;box-sizing:border-box;text-align:left;resize:vertical;}
+
+.rpt-btn{display:inline-block;padding:.55em 1.1em;border-radius:8px;font-weight:700;font-size:.88rem;cursor:pointer;border:2px solid transparent;text-decoration:none;background:#eee;}
+.rpt-btn--solid{background:#2148b8;color:#fff !important;}
+.rpt-btn--solid:hover{background:#183a99;}
+.rpt-btn--outline{background:#fff;color:#2148b8 !important;border-color:#2148b8;}
+.rpt-btn--outline:hover{background:#eef2fc;}
+.rpt-btn--danger-outline{background:#fff;color:#c0392b !important;border-color:#c0392b;}
+.rpt-btn--danger-outline:hover{background:#fdeceb;}
+.rpt-btn--small{padding:.35em .75em;font-size:.8rem;}
+.rpt-toolbar{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:1rem;}
+.rpt-note{font-size:.85rem;color:#5a6577;margin-left:.6rem;}
+.rpt-warn{color:#c0392b;font-weight:600;font-size:.88rem;}
+
+.rpt-tabs{display:flex;gap:.4rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.rpt-tab{padding:.55em 1.1em;border-radius:8px 8px 0 0;font-weight:700;font-size:.9rem;cursor:pointer;background:#e7edfb;color:#33415c;border:none;}
+.rpt-tab.active{background:#2148b8;color:#fff;}
+.rpt-tabpanel{display:none;}
+.rpt-tabpanel.active{display:block;}
+
+.rpt-table-wrap{overflow-x:auto;}
+.rpt-table{width:100%;border-collapse:collapse;font-size:.86rem;}
+.rpt-table th,.rpt-table td{border:1px solid #e3e8f2;padding:.5rem .55rem;text-align:left;}
+.rpt-table th{background:#f3f6fd;white-space:nowrap;}
+.rpt-table tfoot td{background:#f3f6fd;font-weight:700;}
+.rpt-table input[type=text],.rpt-table input[type=number]{width:100%;border:1px solid #cfd7e6;border-radius:5px;padding:.3em .4em;font-size:.85rem;font-family:inherit;}
+
+.rpt-stat-grid{display:flex;flex-wrap:wrap;gap:1rem;margin:.8rem 0 1.2rem;}
+.rpt-stat{border:1px solid #e3e8f2;border-radius:10px;padding:.8rem 1.2rem;min-width:150px;background:#fafbfd;}
+.rpt-stat .label{font-size:.82rem;color:#5a6577;}
+.rpt-stat .value{font-size:1.35rem;font-weight:800;color:#16233c;margin-top:.15rem;}
+
+.rpt-bar-wrap{min-width:160px;}
+.rpt-bar-track{width:100%;height:10px;background:#e3e8f2;border-radius:999px;overflow:hidden;}
+.rpt-bar-fill{height:100%;background:#c0392b;border-radius:999px;}
+.rpt-bar-label{display:block;margin-top:.3rem;font-size:.8rem;color:#33415c;}
+
+.rpt-notice-item{border:1px solid #e3e8f2;border-radius:10px;padding:.9rem 1.1rem;margin-bottom:.8rem;background:#fafbfd;}
+.rpt-notice-item.unread{border-color:#2148b8;background:#eef2fc;}
+.rpt-notice-title{font-weight:700;display:flex;justify-content:space-between;gap:.6rem;align-items:center;}
+.rpt-notice-meta{font-size:.8rem;color:#8b96a8;margin:.2rem 0 .5rem;}
+.rpt-notice-message{white-space:pre-wrap;font-size:.9rem;}
+.rpt-badge{display:inline-block;padding:.15em .6em;border-radius:999px;font-size:.75rem;font-weight:700;}
+.rpt-badge--unread{background:#2148b8;color:#fff;}
+.rpt-badge--read{background:#e3e8f2;color:#5a6577;}
+
+.rpt-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(15,20,35,.5);z-index:9998;padding:2rem 1rem;overflow:auto;}
+.rpt-modal-backdrop.open{display:flex;align-items:flex-start;justify-content:center;}
+.rpt-modal{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:1.4rem 1.6rem;margin:auto;}
+.rpt-modal-close{float:right;}
+
+.report-print-area{display:none;}
+body.report-preview-open{overflow:hidden;}
+body.report-preview-open .report-print-area{
+  display:block;position:fixed;inset:0;background:#fff;overflow:auto;z-index:9999;padding:1.2rem;
+}
+.report-toolbar{display:flex;gap:.6rem;justify-content:flex-end;position:sticky;top:-1.2rem;margin:-1.2rem -1.2rem 1rem;padding:1rem 1.2rem;background:#fff;border-bottom:1px solid #e3e8f2;}
+@media print{
+  .report-toolbar{display:none !important;}
+  body.printing-report *{visibility:hidden;}
+  body.printing-report .report-print-area,body.printing-report .report-print-area *{visibility:visible;}
+  body.printing-report .report-print-area{display:block !important;position:absolute;left:0;top:0;width:100%;}
+}
+.report-page{padding:1rem 0;font-family:inherit;color:#16233c;}
+.report-page h1{font-size:1.4rem;border-bottom:3px solid #16233c;padding-bottom:.4rem;text-align:center;}
+.report-meta{color:#5a6577;font-size:.9rem;margin-bottom:1rem;display:flex;justify-content:space-between;}
+.report-table{width:100%;border-collapse:collapse;font-size:.82rem;margin:.6rem 0 1.2rem;}
+.report-table th,.report-table td{border:1px solid #999;padding:.4rem .5rem;text-align:center;}
+.report-table th{background:#eef1f7;}
+.report-table tfoot td{background:#eef1f7;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+<h1>사업소 장기미납세대 현황 보고 시스템</h1>
+<p class="rpt-desc">본사가 사업소 계정을 발급하고, 각 사업소는 장기미납세대 현황을 보고합니다. 본사는 전체 보고 현황을 통계로 확인하고 사업소에 지시사항을 내릴 수 있습니다.</p>
+
+<div id="loginScreen" class="rpt-app">
+  <section class="rpt-card rpt-login-card">
+    <h3>로그인</h3>
+    <div class="rpt-grid">
+      <label>아이디<input type="text" id="loginId" autocomplete="username"></label>
+      <label>비밀번호<input type="password" id="loginPw" autocomplete="current-password"></label>
+    </div>
+    <button type="button" id="btnLogin" class="rpt-btn rpt-btn--solid">로그인</button>
+    <span id="loginError" class="rpt-warn"></span>
+    <p class="rpt-desc">계정은 본사 관리자가 발급합니다. 아이디/비밀번호를 모르면 본사에 문의하세요.</p>
+  </section>
+</div>
+
+<!-- ================= 관리자(본사) 화면 ================= -->
+<div id="adminPanel" class="rpt-app" style="display:none;">
+  <div class="rpt-toolbar" style="justify-content:space-between;">
+    <span class="rpt-desc" style="margin:0;font-weight:700;">본사 관리자 화면</span>
+    <button type="button" id="btnLogoutAdmin" class="rpt-btn rpt-btn--outline">로그아웃</button>
+  </div>
+
+  <div class="rpt-tabs">
+    <button type="button" class="rpt-tab active" data-tab="adminStats">통계 대시보드</button>
+    <button type="button" class="rpt-tab" data-tab="adminUsers">사업소 계정관리</button>
+    <button type="button" class="rpt-tab" data-tab="adminNotices">지시사항</button>
+  </div>
+
+  <div id="adminStats" class="rpt-tabpanel active">
+    <section class="rpt-card">
+      <h3>전체 현황 (사업소별 최근 보고 기준)</h3>
+      <div class="rpt-stat-grid" id="statCards"></div>
+      <div class="rpt-table-wrap">
+        <table class="rpt-table" id="statsTable">
+          <thead><tr><th>사업소명</th><th>최근 보고일</th><th>보고 횟수</th><th>미납세대</th><th>미납금액</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="rpt-note" id="statsNote"></p>
+    </section>
+  </div>
+
+  <div id="adminUsers" class="rpt-tabpanel">
+    <section class="rpt-card">
+      <h3>사업소 계정 발급</h3>
+      <div class="rpt-grid">
+        <label>사업소명<input type="text" id="newSiteName" placeholder="예) 신화 더 플렉스시티 고객지원센터"></label>
+        <label>아이디<input type="text" id="newUserId"></label>
+        <label>비밀번호<input type="password" id="newUserPw"></label>
+      </div>
+      <button type="button" id="btnCreateUser" class="rpt-btn rpt-btn--solid">계정 생성</button>
+      <span id="createUserNote" class="rpt-note"></span>
+      <div class="rpt-table-wrap" style="margin-top:1.2rem;">
+        <table class="rpt-table" id="usersTable">
+          <thead><tr><th>사업소명</th><th>아이디</th><th>생성일</th><th>보고 이력</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div id="adminNotices" class="rpt-tabpanel">
+    <section class="rpt-card">
+      <h3>지시사항 등록</h3>
+      <div class="rpt-grid">
+        <label>대상 사업소<select id="noticeTargetSite"><option value="">전체 사업소</option></select></label>
+        <label>제목<input type="text" id="noticeTitle" placeholder="예) 내용증명 재발송 지시"></label>
+        <label class="rpt-span2">내용<textarea id="noticeMessage" rows="3" placeholder="지시사항 또는 공지 내용을 입력하세요"></textarea></label>
+      </div>
+      <button type="button" id="btnCreateNotice" class="rpt-btn rpt-btn--solid">지시사항 등록</button>
+      <span id="createNoticeNote" class="rpt-note"></span>
+    </section>
+    <section class="rpt-card">
+      <h3>등록된 지시사항</h3>
+      <div id="adminNoticeList"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= 사업소 화면 ================= -->
+<div id="siteApp" class="rpt-app" style="display:none;">
+  <div class="rpt-toolbar" style="justify-content:space-between;">
+    <span id="currentSiteName" class="rpt-desc" style="margin:0;font-weight:700;"></span>
+    <button type="button" id="btnLogout" class="rpt-btn rpt-btn--outline">로그아웃</button>
+  </div>
+
+  <div class="rpt-tabs">
+    <button type="button" class="rpt-tab active" data-tab="siteReportForm">보고서 작성</button>
+    <button type="button" class="rpt-tab" data-tab="siteReportHistory">제출 이력</button>
+    <button type="button" class="rpt-tab" data-tab="siteNotices">지시사항 <span id="noticeUnreadBadge"></span></button>
+  </div>
+
+  <div id="siteReportForm" class="rpt-tabpanel active">
+    <section class="rpt-card">
+      <h3>사업소 장기미납세대 현황</h3>
+      <div class="rpt-grid">
+        <label>기준일<input type="date" id="baseDate"></label>
+      </div>
+      <div class="rpt-table-wrap">
+        <table class="rpt-table" id="rowsTable">
+          <thead><tr><th style="width:90px;">호실</th><th>업체명</th><th style="width:100px;">미납개월(총)</th><th style="width:130px;">부과금액</th><th style="width:120px;">미납연체료</th><th style="width:130px;">미납금액</th><th>조치 및 납부계획</th><th style="width:40px;"></th></tr></thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr><td colspan="3">합계</td><td id="sumCharged">0</td><td id="sumOverdue">0</td><td id="sumUnpaid">0</td><td colspan="2"></td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <button type="button" id="btnAddRow" class="rpt-btn rpt-btn--outline" style="margin-top:.8rem;">+ 세대 추가</button>
+
+      <div class="rpt-grid" style="margin-top:1rem;">
+        <label class="rpt-span2">본사 참고보고 사항<textarea id="reportNote" rows="2" placeholder="본사에 함께 전달할 특이사항이 있으면 입력하세요"></textarea></label>
+      </div>
+      <div class="rpt-grid">
+        <label>담당<input type="text" id="apStaff"></label>
+        <label>과장<input type="text" id="apManager"></label>
+        <label>소장<input type="text" id="apChief"></label>
+      </div>
+      <button type="button" id="btnSubmitReport" class="rpt-btn rpt-btn--solid" style="margin-top:.6rem;">본사로 보고하기</button>
+      <span id="submitReportNote" class="rpt-note"></span>
+    </section>
+  </div>
+
+  <div id="siteReportHistory" class="rpt-tabpanel">
+    <section class="rpt-card">
+      <h3>제출 이력</h3>
+      <div class="rpt-table-wrap">
+        <table class="rpt-table" id="historyTable">
+          <thead><tr><th>기준일</th><th>제출일시</th><th>미납세대</th><th>미납금액</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div id="siteNotices" class="rpt-tabpanel">
+    <section class="rpt-card">
+      <h3>본사 지시사항</h3>
+      <div id="siteNoticeList"></div>
+    </section>
+  </div>
+</div>
+
+<div id="reportModalBackdrop" class="rpt-modal-backdrop">
+  <div class="rpt-modal">
+    <button type="button" id="btnCloseModal" class="rpt-btn rpt-btn--outline rpt-modal-close">닫기</button>
+    <div id="reportModalBody"></div>
+  </div>
+</div>
+
+<div id="reportPrintArea" class="report-print-area"></div>
+
+<hr>
+<p class="site-footer">© 본사 관리 시스템</p>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+function $(id){ return document.getElementById(id); }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtNum(n){ return Math.round(Number(n)||0).toLocaleString('ko-KR'); }
+function fmtDateTime(iso){
+  if(!iso) return '';
+  var d = new Date(iso);
+  if(isNaN(d.getTime())) return iso;
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+/* ---------- 백엔드(Cloudflare Worker) 연결 ---------- */
+/* server/README.md 안내대로 Worker를 배포한 뒤, 아래 주소를 실제 Worker URL로 바꾸세요. */
+var API_BASE = 'https://REPLACE_WITH_YOUR_WORKER_URL.workers.dev';
+var SESSION_KEY = 'rptSession';
+
+function getSession(){
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; }
+}
+function setSession(session){ localStorage.setItem(SESSION_KEY, JSON.stringify(session)); }
+function clearSession(){ localStorage.removeItem(SESSION_KEY); }
+
+async function apiFetch(path, opts){
+  opts = opts || {};
+  var session = getSession();
+  var headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if(session && session.token) headers['Authorization'] = 'Bearer ' + session.token;
+  var res = await fetch(API_BASE + path, {
+    method: opts.method || 'GET',
+    headers: headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  var data = await res.json().catch(function(){ return {}; });
+  if(!res.ok) throw new Error(data.error || ('요청 실패 (' + res.status + ')'));
+  return data;
+}
+
+/* ---------- 탭 전환 ---------- */
+function initTabs(scopeEl){
+  scopeEl.querySelectorAll('.rpt-tab').forEach(function(tabBtn){
+    tabBtn.addEventListener('click', function(){
+      var tabs = tabBtn.parentElement.querySelectorAll('.rpt-tab');
+      tabs.forEach(function(t){ t.classList.remove('active'); });
+      tabBtn.classList.add('active');
+      var panels = scopeEl.querySelectorAll('.rpt-tabpanel');
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      var target = $(tabBtn.dataset.tab);
+      if(target) target.classList.add('active');
+      if(tabBtn.dataset.tab === 'adminNotices') refreshAdminNotices();
+      if(tabBtn.dataset.tab === 'siteReportHistory') refreshHistory();
+      if(tabBtn.dataset.tab === 'siteNotices') refreshSiteNotices();
+    });
+  });
+}
+
+/* ================= 사업소: 보고서 작성 ================= */
+var ROW_FIELDS = ['unit','company','unpaidMonths','chargedAmount','overdueFee','unpaidAmount','actionPlan'];
+
+function addRow(row){
+  row = row || {};
+  var tbody = document.querySelector('#rowsTable tbody');
+  var tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td><input type="text" data-f="unit" value="'+escapeHtml(row.unit||'')+'"></td>' +
+    '<td><input type="text" data-f="company" value="'+escapeHtml(row.company||'')+'"></td>' +
+    '<td><input type="number" data-f="unpaidMonths" value="'+(row.unpaidMonths||'')+'" min="0"></td>' +
+    '<td><input type="number" data-f="chargedAmount" value="'+(row.chargedAmount||'')+'" min="0"></td>' +
+    '<td><input type="number" data-f="overdueFee" value="'+(row.overdueFee||'')+'" min="0"></td>' +
+    '<td><input type="number" data-f="unpaidAmount" value="'+(row.unpaidAmount||'')+'" min="0"></td>' +
+    '<td><input type="text" data-f="actionPlan" value="'+escapeHtml(row.actionPlan||'')+'"></td>' +
+    '<td><button type="button" class="rpt-btn rpt-btn--danger-outline rpt-btn--small act-remove-row">삭제</button></td>';
+  tbody.appendChild(tr);
+}
+
+function readRows(){
+  var rows = [];
+  document.querySelectorAll('#rowsTable tbody tr').forEach(function(tr){
+    var row = {};
+    ROW_FIELDS.forEach(function(f){
+      var input = tr.querySelector('[data-f="'+f+'"]');
+      row[f] = input ? input.value : '';
+    });
+    if(row.unit || row.company) rows.push(row);
+  });
+  return rows;
+}
+
+function recalcTotals(){
+  var rows = readRows();
+  var charged = 0, overdue = 0, unpaid = 0;
+  rows.forEach(function(r){
+    charged += Number(r.chargedAmount)||0;
+    overdue += Number(r.overdueFee)||0;
+    unpaid += Number(r.unpaidAmount)||0;
+  });
+  $('sumCharged').textContent = fmtNum(charged);
+  $('sumOverdue').textContent = fmtNum(overdue);
+  $('sumUnpaid').textContent = fmtNum(unpaid);
+}
+
+function resetReportForm(){
+  document.querySelector('#rowsTable tbody').innerHTML = '';
+  addRow(); addRow(); addRow();
+  $('baseDate').value = todayStr();
+  $('reportNote').value = '';
+  $('apStaff').value=''; $('apManager').value=''; $('apChief').value='';
+  recalcTotals();
+}
+
+async function submitReport(){
+  var baseDate = $('baseDate').value;
+  if(!baseDate){ $('submitReportNote').textContent = '기준일을 입력하세요.'; return; }
+  var rows = readRows();
+  if(!rows.length){ $('submitReportNote').textContent = '미납세대를 1건 이상 입력하세요.'; return; }
+  if(!confirm('입력한 내용을 본사로 보고하시겠습니까?')) return;
+  $('btnSubmitReport').disabled = true;
+  try{
+    await apiFetch('/api/site/reports', { method:'POST', body:{
+      baseDate: baseDate, rows: rows, note: $('reportNote').value,
+      approvers: { staff: $('apStaff').value, manager: $('apManager').value, chief: $('apChief').value }
+    }});
+    $('submitReportNote').textContent = '본사에 보고되었습니다.';
+    resetReportForm();
+  } catch(e){
+    $('submitReportNote').textContent = '보고 실패: ' + e.message;
+  } finally {
+    $('btnSubmitReport').disabled = false;
+    setTimeout(function(){ $('submitReportNote').textContent=''; }, 4000);
+  }
+}
+
+/* ================= 보고서 인쇄 미리보기 ================= */
+function showReportPreview(html){
+  $('reportPrintArea').innerHTML =
+    '<div class="report-toolbar">' +
+      '<button type="button" id="btnPrintReport" class="rpt-btn rpt-btn--solid">🖨️ 인쇄 / PDF로 저장</button>' +
+      '<button type="button" id="btnCloseReport" class="rpt-btn rpt-btn--outline">닫기</button>' +
+    '</div>' + html;
+  document.body.classList.add('report-preview-open');
+  $('btnPrintReport').addEventListener('click', function(){
+    document.body.classList.add('printing-report');
+    window.print();
+  });
+  $('btnCloseReport').addEventListener('click', closeReportPreview);
+}
+function closeReportPreview(){
+  document.body.classList.remove('report-preview-open');
+  $('reportPrintArea').innerHTML = '';
+}
+window.addEventListener('afterprint', function(){ document.body.classList.remove('printing-report'); });
+
+function buildReportHtml(siteName, report){
+  var rows = report.rows.map(function(r){
+    return '<tr><td>'+escapeHtml(r.unit)+'</td><td>'+escapeHtml(r.company)+'</td><td>'+fmtNum(r.unpaidMonths)+'</td>'+
+      '<td>'+fmtNum(r.chargedAmount)+'</td><td>'+fmtNum(r.overdueFee)+'</td><td>'+fmtNum(r.unpaidAmount)+'</td>'+
+      '<td style="text-align:left;">'+escapeHtml(r.actionPlan)+'</td></tr>';
+  }).join('');
+  var ap = report.approvers || {};
+  return '<div class="report-page">' +
+    '<h1>사업소 장기미납세대 현황</h1>' +
+    '<div class="report-meta"><span>사업소: '+escapeHtml(siteName||'')+'</span><span>기준일: '+escapeHtml(report.baseDate||'')+'</span></div>' +
+    '<table class="report-table"><thead><tr><th>호실</th><th>업체명</th><th>미납개월(총)</th><th>부과금액</th><th>미납연체료</th><th>미납금액</th><th>조치 및 납부계획</th></tr></thead>' +
+    '<tbody>'+rows+'</tbody>' +
+    '<tfoot><tr><td colspan="3">합계</td><td>'+fmtNum(report.totals.chargedAmount)+'</td><td>'+fmtNum(report.totals.overdueFee)+'</td><td>'+fmtNum(report.totals.unpaidAmount)+'</td><td></td></tr></tfoot>' +
+    '</table>' +
+    (report.note ? '<p><strong>본사 참고보고 사항:</strong><br>'+escapeHtml(report.note).replace(/\n/g,'<br>')+'</p>' : '') +
+    '<table class="report-table" style="max-width:420px;margin-top:1.5rem;">' +
+    '<thead><tr><th rowspan="2" style="width:40px;">결재</th><th>담당</th><th>과장</th><th>소장</th></tr>' +
+    '<tr><td style="height:2.6rem;">'+escapeHtml(ap.staff||'')+'</td><td>'+escapeHtml(ap.manager||'')+'</td><td>'+escapeHtml(ap.chief||'')+'</td></tr></thead>' +
+    '</table>' +
+  '</div>';
+}
+
+/* ================= 사업소: 제출 이력 ================= */
+async function refreshHistory(){
+  try{
+    var result = await apiFetch('/api/site/reports');
+    var rows = result.reports.map(function(r){
+      return '<tr><td>'+escapeHtml(r.baseDate)+'</td><td>'+fmtDateTime(r.submittedAt)+'</td>'+
+        '<td>'+r.totals.unitCount+'세대</td><td>'+fmtNum(r.totals.unpaidAmount)+'</td>'+
+        '<td><button type="button" class="rpt-btn rpt-btn--outline rpt-btn--small act-view-history" data-id="'+r.id+'">보기</button></td></tr>';
+    }).join('');
+    document.querySelector('#historyTable tbody').innerHTML = rows || '<tr><td colspan="5">제출한 보고가 없습니다.</td></tr>';
+    window._siteHistoryReports = result.reports;
+  } catch(e){
+    document.querySelector('#historyTable tbody').innerHTML = '<tr><td colspan="5">불러오기 실패: '+escapeHtml(e.message)+'</td></tr>';
+  }
+}
+
+/* ================= 사업소: 지시사항 ================= */
+async function refreshSiteNotices(){
+  try{
+    var result = await apiFetch('/api/site/notices');
+    var unread = result.notices.filter(function(n){ return !n.acked; }).length;
+    $('noticeUnreadBadge').textContent = unread ? '('+unread+')' : '';
+    var html = result.notices.map(function(n){
+      return '<div class="rpt-notice-item'+(n.acked?'':' unread')+'">' +
+        '<div class="rpt-notice-title"><span>'+escapeHtml(n.title)+'</span>'+
+        (n.acked ? '<span class="rpt-badge rpt-badge--read">확인함</span>' : '<span class="rpt-badge rpt-badge--unread">미확인</span>')+
+        '</div>' +
+        '<div class="rpt-notice-meta">'+(n.targetSiteId ? '개별 지시' : '전체 공지')+' · '+fmtDateTime(n.createdAt)+'</div>' +
+        '<div class="rpt-notice-message">'+escapeHtml(n.message)+'</div>' +
+        (n.acked ? '' : '<button type="button" class="rpt-btn rpt-btn--solid rpt-btn--small act-ack-notice" data-id="'+n.id+'" style="margin-top:.6rem;">확인했습니다</button>') +
+      '</div>';
+    }).join('');
+    $('siteNoticeList').innerHTML = html || '<p class="rpt-desc">등록된 지시사항이 없습니다.</p>';
+  } catch(e){
+    $('siteNoticeList').innerHTML = '<p class="rpt-warn">불러오기 실패: '+escapeHtml(e.message)+'</p>';
+  }
+}
+async function ackNotice(id){
+  try{
+    await apiFetch('/api/site/notices/ack', { method:'POST', body:{ id: Number(id) } });
+    await refreshSiteNotices();
+  } catch(e){
+    alert('처리 실패: ' + e.message);
+  }
+}
+
+/* ================= 관리자: 계정관리 ================= */
+async function createUser(){
+  var siteName = $('newSiteName').value.trim();
+  var id = $('newUserId').value.trim();
+  var password = $('newUserPw').value;
+  if(!siteName || !id || !password){ $('createUserNote').textContent = '사업소명, 아이디, 비밀번호를 모두 입력하세요.'; return; }
+  try{
+    await apiFetch('/api/admin/users', { method:'POST', body:{ siteName:siteName, id:id, password:password } });
+    $('newSiteName').value=''; $('newUserId').value=''; $('newUserPw').value='';
+    $('createUserNote').textContent = '계정이 생성되었습니다.';
+    await refreshUsersTable();
+    await populateNoticeTargets();
+  } catch(e){
+    $('createUserNote').textContent = '생성 실패: ' + e.message;
+  }
+}
+async function refreshUsersTable(){
+  try{
+    var result = await apiFetch('/api/admin/users');
+    window._adminUsers = result.users;
+    var rows = result.users.map(function(u){
+      return '<tr><td>'+escapeHtml(u.siteName)+'</td><td>'+escapeHtml(u.id)+'</td>'+
+        '<td>'+escapeHtml((u.createdAt||'').slice(0,10))+'</td>'+
+        '<td><button type="button" class="rpt-btn rpt-btn--outline rpt-btn--small act-view-site" data-site-id="'+escapeHtml(u.siteId)+'" data-site-name="'+escapeHtml(u.siteName)+'">이력 보기</button></td></tr>';
+    }).join('');
+    document.querySelector('#usersTable tbody').innerHTML = rows || '<tr><td colspan="4">등록된 사업소 계정이 없습니다.</td></tr>';
+  } catch(e){
+    document.querySelector('#usersTable tbody').innerHTML = '<tr><td colspan="4">불러오기 실패: '+escapeHtml(e.message)+'</td></tr>';
+  }
+}
+
+/* ================= 관리자: 통계 대시보드 ================= */
+async function refreshStats(){
+  try{
+    var result = await apiFetch('/api/admin/stats');
+    $('statCards').innerHTML =
+      '<div class="rpt-stat"><div class="label">전체 사업소</div><div class="value">'+result.siteCount+'개소</div></div>' +
+      '<div class="rpt-stat"><div class="label">최근 보고 제출</div><div class="value">'+result.reportedSiteCount+' / '+result.siteCount+'개소</div></div>' +
+      '<div class="rpt-stat"><div class="label">총 미납세대</div><div class="value">'+result.grandTotal.unitCount+'세대</div></div>' +
+      '<div class="rpt-stat"><div class="label">총 미납금액</div><div class="value">'+fmtNum(result.grandTotal.unpaidAmount)+'원</div></div>';
+
+    var maxUnpaid = result.sites.reduce(function(m,s){ return Math.max(m, s.totals.unpaidAmount); }, 0) || 1;
+    var rows = result.sites.map(function(s){
+      var pct = Math.round((s.totals.unpaidAmount / maxUnpaid) * 100);
+      return '<tr>' +
+        '<td>'+escapeHtml(s.siteName)+'</td>' +
+        '<td>'+(s.latestBaseDate ? escapeHtml(s.latestBaseDate) : '<span class="rpt-note">미제출</span>')+'</td>' +
+        '<td>'+s.reportCount+'회</td>' +
+        '<td>'+s.totals.unitCount+'세대</td>' +
+        '<td><div class="rpt-bar-wrap"><div class="rpt-bar-track"><div class="rpt-bar-fill" style="width:'+pct+'%;"></div></div><span class="rpt-bar-label">'+fmtNum(s.totals.unpaidAmount)+'원</span></div></td>' +
+        '<td>'+(s.reportCount ? '<button type="button" class="rpt-btn rpt-btn--outline rpt-btn--small act-view-site" data-site-id="'+escapeHtml(s.siteId)+'" data-site-name="'+escapeHtml(s.siteName)+'">상세</button>' : '')+'</td>' +
+      '</tr>';
+    }).join('');
+    document.querySelector('#statsTable tbody').innerHTML = rows || '<tr><td colspan="6">등록된 사업소가 없습니다.</td></tr>';
+    $('statsNote').textContent = '각 사업소의 가장 최근 보고를 기준으로 집계합니다.';
+  } catch(e){
+    $('statsNote').textContent = '통계를 불러오지 못했습니다: ' + e.message;
+  }
+}
+
+/* ================= 관리자: 사업소 보고 이력 모달 ================= */
+function openModal(html){
+  $('reportModalBody').innerHTML = html;
+  $('reportModalBackdrop').classList.add('open');
+}
+function closeModal(){
+  $('reportModalBackdrop').classList.remove('open');
+  $('reportModalBody').innerHTML = '';
+}
+async function viewSiteHistory(siteId, siteName){
+  try{
+    var result = await apiFetch('/api/admin/reports?siteId=' + encodeURIComponent(siteId));
+    if(!result.reports.length){
+      openModal('<h3>'+escapeHtml(siteName)+' — 제출 이력</h3><p class="rpt-desc">제출한 보고가 없습니다.</p>');
+      return;
+    }
+    var rows = result.reports.map(function(r){
+      return '<tr><td>'+escapeHtml(r.baseDate)+'</td><td>'+fmtDateTime(r.submittedAt)+'</td>'+
+        '<td>'+r.totals.unitCount+'세대</td><td>'+fmtNum(r.totals.unpaidAmount)+'</td>'+
+        '<td><button type="button" class="rpt-btn rpt-btn--outline rpt-btn--small act-view-report-detail" data-site-name="'+escapeHtml(siteName)+'" data-idx="'+result.reports.indexOf(r)+'">보고서 보기</button></td></tr>';
+    }).join('');
+    window._modalSiteReports = result.reports;
+    window._modalSiteName = siteName;
+    openModal('<h3>'+escapeHtml(siteName)+' — 제출 이력</h3>' +
+      '<div class="rpt-table-wrap"><table class="rpt-table"><thead><tr><th>기준일</th><th>제출일시</th><th>미납세대</th><th>미납금액</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>');
+  } catch(e){
+    alert('이력을 불러오지 못했습니다: ' + e.message);
+  }
+}
+
+/* ================= 관리자: 지시사항 ================= */
+async function populateNoticeTargets(){
+  try{
+    var result = await apiFetch('/api/admin/users');
+    var opts = ['<option value="">전체 사업소</option>'].concat(result.users.map(function(u){
+      return '<option value="'+escapeHtml(u.siteId)+'">'+escapeHtml(u.siteName)+'</option>';
+    }));
+    $('noticeTargetSite').innerHTML = opts.join('');
+  } catch(e){ /* ignore */ }
+}
+async function createNotice(){
+  var targetSiteId = $('noticeTargetSite').value || null;
+  var title = $('noticeTitle').value.trim();
+  var message = $('noticeMessage').value.trim();
+  if(!title || !message){ $('createNoticeNote').textContent = '제목과 내용을 입력하세요.'; return; }
+  try{
+    await apiFetch('/api/admin/notices', { method:'POST', body:{ targetSiteId: targetSiteId, title: title, message: message } });
+    $('noticeTitle').value=''; $('noticeMessage').value='';
+    $('createNoticeNote').textContent = '지시사항이 등록되었습니다.';
+    await refreshAdminNotices();
+  } catch(e){
+    $('createNoticeNote').textContent = '등록 실패: ' + e.message;
+  }
+  setTimeout(function(){ $('createNoticeNote').textContent=''; }, 3000);
+}
+async function refreshAdminNotices(){
+  try{
+    var result = await apiFetch('/api/admin/notices');
+    var siteCount = (window._adminUsers||[]).length;
+    var html = result.notices.map(function(n){
+      var targetLabel = n.targetSiteId ? ('개별 지시 → ' + escapeHtml(n.targetSiteName || n.targetSiteId)) : '전체 공지';
+      var ackCount = n.ackedBy.length;
+      var ackTotal = n.targetSiteId ? 1 : siteCount;
+      return '<div class="rpt-notice-item">' +
+        '<div class="rpt-notice-title"><span>'+escapeHtml(n.title)+'</span><span class="rpt-badge rpt-badge--read">확인 '+ackCount+' / '+ackTotal+'</span></div>' +
+        '<div class="rpt-notice-meta">'+targetLabel+' · '+fmtDateTime(n.createdAt)+'</div>' +
+        '<div class="rpt-notice-message">'+escapeHtml(n.message)+'</div>' +
+      '</div>';
+    }).join('');
+    $('adminNoticeList').innerHTML = html || '<p class="rpt-desc">등록된 지시사항이 없습니다.</p>';
+  } catch(e){
+    $('adminNoticeList').innerHTML = '<p class="rpt-warn">불러오기 실패: '+escapeHtml(e.message)+'</p>';
+  }
+}
+
+/* ---------- 로그인/로그아웃 ---------- */
+async function login(){
+  var id = $('loginId').value.trim();
+  var password = $('loginPw').value;
+  $('loginError').textContent = '';
+  if(!id || !password){ $('loginError').textContent = '아이디와 비밀번호를 입력하세요.'; return; }
+  try{
+    var res = await fetch(API_BASE + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id:id, password:password })
+    });
+    var data = await res.json().catch(function(){ return {}; });
+    if(!res.ok) throw new Error(data.error || '로그인에 실패했습니다.');
+    setSession({ token:data.token, role:data.role, siteId:data.siteId, siteName:data.siteName });
+    await showLoggedInView();
+  } catch(e){
+    $('loginError').textContent = e.message;
+  }
+}
+function logout(){
+  clearSession();
+  showLoginView();
+}
+
+/* ---------- 화면 전환 ---------- */
+function showLoginView(){
+  $('loginScreen').style.display = 'block';
+  $('adminPanel').style.display = 'none';
+  $('siteApp').style.display = 'none';
+  $('loginId').value = ''; $('loginPw').value = ''; $('loginError').textContent = '';
+}
+async function showLoggedInView(){
+  var session = getSession();
+  if(!session){ showLoginView(); return; }
+  $('loginScreen').style.display = 'none';
+  if(session.role === 'admin'){
+    $('adminPanel').style.display = 'block';
+    $('siteApp').style.display = 'none';
+    await refreshStats();
+    await refreshUsersTable();
+    await populateNoticeTargets();
+  } else {
+    $('adminPanel').style.display = 'none';
+    $('siteApp').style.display = 'block';
+    $('currentSiteName').textContent = session.siteName + ' 님으로 로그인됨';
+    resetReportForm();
+    await refreshSiteNotices();
+  }
+}
+
+/* ---------- 초기화 ---------- */
+function init(){
+  $('btnLogin').addEventListener('click', login);
+  $('loginPw').addEventListener('keydown', function(e){ if(e.key === 'Enter') login(); });
+  $('btnLogout').addEventListener('click', logout);
+  $('btnLogoutAdmin').addEventListener('click', logout);
+  $('btnCloseModal').addEventListener('click', closeModal);
+  $('reportModalBackdrop').addEventListener('click', function(e){ if(e.target === $('reportModalBackdrop')) closeModal(); });
+
+  initTabs($('adminPanel'));
+  initTabs($('siteApp'));
+
+  $('btnCreateUser').addEventListener('click', createUser);
+  $('btnCreateNotice').addEventListener('click', createNotice);
+  $('btnAddRow').addEventListener('click', function(){ addRow(); });
+  $('btnSubmitReport').addEventListener('click', submitReport);
+
+  document.querySelector('#rowsTable tbody').addEventListener('input', recalcTotals);
+  document.querySelector('#rowsTable tbody').addEventListener('click', function(e){
+    var btn = e.target.closest('.act-remove-row');
+    if(!btn) return;
+    btn.closest('tr').remove();
+    recalcTotals();
+  });
+
+  document.querySelector('#usersTable').addEventListener('click', function(e){
+    var btn = e.target.closest('.act-view-site');
+    if(!btn) return;
+    viewSiteHistory(btn.dataset.siteId, btn.dataset.siteName);
+  });
+  document.querySelector('#statsTable').addEventListener('click', function(e){
+    var btn = e.target.closest('.act-view-site');
+    if(!btn) return;
+    viewSiteHistory(btn.dataset.siteId, btn.dataset.siteName);
+  });
+  $('reportModalBody').addEventListener('click', function(e){
+    var btn = e.target.closest('.act-view-report-detail');
+    if(!btn) return;
+    var report = window._modalSiteReports[Number(btn.dataset.idx)];
+    showReportPreview(buildReportHtml(btn.dataset.siteName, report));
+  });
+  document.querySelector('#historyTable').addEventListener('click', function(e){
+    var btn = e.target.closest('.act-view-history');
+    if(!btn) return;
+    var report = (window._siteHistoryReports||[]).find(function(r){ return r.id === Number(btn.dataset.id); });
+    if(report) showReportPreview(buildReportHtml(getSession().siteName, report));
+  });
+  $('siteNoticeList').addEventListener('click', function(e){
+    var btn = e.target.closest('.act-ack-notice');
+    if(!btn) return;
+    ackNotice(btn.dataset.id);
+  });
+
+  if(getSession()) showLoggedInView();
+  else showLoginView();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
