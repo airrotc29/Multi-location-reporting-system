@@ -1,1 +1,67 @@
-[]
+[
+  {
+    "id": 1,
+    "baseDate": "2026-07-16",
+    "rows": [
+      {
+        "unit": "301",
+        "company": "정리테트",
+        "unpaidMonths": 3,
+        "chargedAmount": 3456566,
+        "overdueFee": 72370,
+        "unpaidAmount": 3528936,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      },
+      {
+        "unit": "302",
+        "company": "리자가구",
+        "unpaidMonths": 3,
+        "chargedAmount": 6854455,
+        "overdueFee": 72370,
+        "unpaidAmount": 6926825,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      },
+      {
+        "unit": "303",
+        "company": "리센느 주식회사",
+        "unpaidMonths": 3,
+        "chargedAmount": 1712952,
+        "overdueFee": 72370,
+        "unpaidAmount": 1785322,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      },
+      {
+        "unit": "304",
+        "company": "이비지테크",
+        "unpaidMonths": 3,
+        "chargedAmount": 5665677,
+        "overdueFee": 72370,
+        "unpaidAmount": 5738047,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      },
+      {
+        "unit": "305",
+        "company": "알리자 부부텍트",
+        "unpaidMonths": 3,
+        "chargedAmount": 9656455,
+        "overdueFee": 72370,
+        "unpaidAmount": 9728825,
+        "actionPlan": "무료주차제한 및 독촉장발송"
+      }
+    ],
+    "totals": {
+      "chargedAmount": 27346105,
+      "overdueFee": 361850,
+      "unpaidAmount": 27707955,
+      "unitCount": 5
+    },
+    "note": "",
+    "approvers": {
+      "staff": "",
+      "manager": "",
+      "chief": ""
+    },
+    "submittedAt": "2026-07-16T05:03:20.307Z",
+    "submittedBy": "서울숲AK"
+  }
+]
