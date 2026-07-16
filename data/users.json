@@ -14,5 +14,13 @@
     "siteId": "청라-에이스하이테크시티-ngs3sl",
     "siteName": "청라 에이스하이테크시티",
     "createdAt": "2026-07-16T04:01:06.159Z"
+  },
+  {
+    "id": "서울숲AK",
+    "passwordHash": "XbpyicMj5El2-AFVFQ4f2Q.56xh9gouV8KinE59t591WXccZqrVpmlcC5s-vGhSUSg",
+    "role": "user",
+    "siteId": "서울숲ak-5ok4ys",
+    "siteName": "서울숲AK",
+    "createdAt": "2026-07-16T04:58:29.892Z"
   }
 ]
