@@ -100,6 +100,48 @@ body.report-preview-open .report-print-area{
 .report-table th,.report-table td{border:1px solid #999;padding:.4rem .5rem;text-align:center;}
 .report-table th{background:#eef1f7;}
 .report-table tfoot td{background:#eef1f7;font-weight:700;}
+.report-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+.rpt-table--sticky-first td:first-child,.rpt-table--sticky-first th:first-child{position:sticky;left:0;background:#fff;z-index:1;}
+.rpt-table--sticky-first th:first-child{background:#f3f6fd;}
+
+/* ================= 스마트폰 세로보기 최적화 ================= */
+@media (max-width: 640px){
+  .page-wrap{padding:1.1rem .7rem 3rem;}
+  h1{font-size:1.3rem;}
+  .rpt-desc{font-size:.86rem;}
+  .rpt-card{padding:1rem;}
+
+  .rpt-btn,.rpt-file-btn{padding:.7em 1em;font-size:.92rem;}
+  .rpt-toolbar--stack-mobile{gap:.5rem;}
+  .rpt-toolbar--stack-mobile > .rpt-btn,.rpt-toolbar--stack-mobile > .rpt-file-btn{flex:1 1 auto;text-align:center;}
+  #btnAddRow{width:100%;}
+
+  .rpt-tabs{gap:.3rem;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -.7rem 1rem;padding:0 .7rem 2px;}
+  .rpt-tab{flex:0 0 auto;padding:.6em .9em;font-size:.85rem;white-space:nowrap;}
+
+  .rpt-stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;}
+  .rpt-stat{min-width:0;padding:.7rem .9rem;}
+  .rpt-stat .value{font-size:1.15rem;}
+
+  .rpt-modal-backdrop{padding:0;}
+  .rpt-modal{border-radius:0;min-height:100%;padding:1rem;}
+
+  /* 보고서 작성 표: 표 형태 대신 세대별 카드로 쌓아 보여줌 */
+  #rowsTable, #rowsTable thead, #rowsTable tbody, #rowsTable tfoot, #rowsTable tr, #rowsTable td{display:block;width:100%;}
+  #rowsTable{border:none;}
+  #rowsTable thead{display:none;}
+  #rowsTable tbody tr{border:1px solid #cfd7e6;border-radius:10px;padding:.8rem;margin-bottom:.9rem;background:#fafbfd;}
+  #rowsTable tfoot tr{border:1px solid #cfd7e6;border-radius:10px;padding:.8rem;background:#eef2fc;}
+  #rowsTable td{border:none;padding:.4rem 0;}
+  #rowsTable td[data-label]:not([data-label=""])::before{content:attr(data-label);display:block;font-size:.78rem;font-weight:700;color:#5a6577;margin-bottom:.2rem;}
+  #rowsTable td:last-child{padding-top:.3rem;}
+  #rowsTable td:last-child .rpt-btn{width:100%;}
+
+  /* 그 외 표(통계/이력 등)는 좌우 스크롤 유지, 살짝 더 촘촘하게 */
+  .rpt-table{font-size:.8rem;}
+  .rpt-table th,.rpt-table td{padding:.4rem .45rem;}
+}
 </style>
 </head>
 <body>
@@ -151,7 +193,7 @@ body.report-preview-open .report-print-area{
       <h3>전체 현황 (사업소별 최근 보고 기준)</h3>
       <div class="rpt-stat-grid" id="statCards"></div>
       <div class="rpt-table-wrap">
-        <table class="rpt-table" id="statsTable">
+        <table class="rpt-table rpt-table--sticky-first" id="statsTable">
           <thead><tr><th>사업소명</th><th>최근 보고일</th><th>보고 횟수</th><th>미납세대</th><th>미납금액</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
@@ -171,7 +213,7 @@ body.report-preview-open .report-print-area{
       <button type="button" id="btnCreateUser" class="rpt-btn rpt-btn--solid">계정 생성</button>
       <span id="createUserNote" class="rpt-note"></span>
       <div class="rpt-table-wrap" style="margin-top:1.2rem;">
-        <table class="rpt-table" id="usersTable">
+        <table class="rpt-table rpt-table--sticky-first" id="usersTable">
           <thead><tr><th>사업소명</th><th>아이디</th><th>생성일</th><th>보고 이력</th></tr></thead>
           <tbody></tbody>
         </table>
@@ -216,7 +258,7 @@ body.report-preview-open .report-print-area{
       <div class="rpt-grid">
         <label>기준일<input type="date" id="baseDate"></label>
       </div>
-      <div class="rpt-toolbar">
+      <div class="rpt-toolbar rpt-toolbar--stack-mobile">
         <button type="button" id="btnDownloadTemplate" class="rpt-btn rpt-btn--outline">📥 엑셀 서식 다운로드</button>
         <label class="rpt-file-btn">📤 엑셀 업로드<input type="file" id="excelUploadInput" accept=".xlsx,.xls" style="display:none;"></label>
         <span id="excelImportNote" class="rpt-note"></span>
@@ -226,7 +268,7 @@ body.report-preview-open .report-print-area{
           <thead><tr><th style="width:90px;">호실</th><th>업체명</th><th style="width:100px;">미납개월(총)</th><th style="width:130px;">부과금액</th><th style="width:120px;">미납연체료</th><th style="width:130px;">미납금액</th><th>조치 및 납부계획</th><th style="width:40px;"></th></tr></thead>
           <tbody></tbody>
           <tfoot>
-            <tr><td colspan="3">합계</td><td id="sumCharged">0</td><td id="sumOverdue">0</td><td id="sumUnpaid">0</td><td colspan="2"></td></tr>
+            <tr><td colspan="3" data-label="">합계</td><td id="sumCharged" data-label="부과금액 합계">0</td><td id="sumOverdue" data-label="미납연체료 합계">0</td><td id="sumUnpaid" data-label="미납금액 합계">0</td><td colspan="2" data-label=""></td></tr>
           </tfoot>
         </table>
       </div>
@@ -244,7 +286,7 @@ body.report-preview-open .report-print-area{
     <section class="rpt-card">
       <h3>제출 이력</h3>
       <div class="rpt-table-wrap">
-        <table class="rpt-table" id="historyTable">
+        <table class="rpt-table rpt-table--sticky-first" id="historyTable">
           <thead><tr><th>기준일</th><th>제출일시</th><th>미납세대</th><th>미납금액</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
@@ -341,14 +383,14 @@ function addRow(row){
   var tbody = document.querySelector('#rowsTable tbody');
   var tr = document.createElement('tr');
   tr.innerHTML =
-    '<td><input type="text" data-f="unit" value="'+escapeHtml(row.unit||'')+'"></td>' +
-    '<td><input type="text" data-f="company" value="'+escapeHtml(row.company||'')+'"></td>' +
-    '<td><input type="number" data-f="unpaidMonths" value="'+(row.unpaidMonths||'')+'" min="0"></td>' +
-    '<td><input type="number" data-f="chargedAmount" value="'+(row.chargedAmount||'')+'" min="0"></td>' +
-    '<td><input type="number" data-f="overdueFee" value="'+(row.overdueFee||'')+'" min="0"></td>' +
-    '<td><input type="number" data-f="unpaidAmount" value="'+((Number(row.chargedAmount)||0)+(Number(row.overdueFee)||0))+'" readonly tabindex="-1"></td>' +
-    '<td><input type="text" data-f="actionPlan" value="'+escapeHtml(row.actionPlan||'')+'"></td>' +
-    '<td><button type="button" class="rpt-btn rpt-btn--danger-outline rpt-btn--small act-remove-row">삭제</button></td>';
+    '<td data-label="호실"><input type="text" data-f="unit" value="'+escapeHtml(row.unit||'')+'"></td>' +
+    '<td data-label="업체명"><input type="text" data-f="company" value="'+escapeHtml(row.company||'')+'"></td>' +
+    '<td data-label="미납개월(총)"><input type="number" data-f="unpaidMonths" value="'+(row.unpaidMonths||'')+'" min="0"></td>' +
+    '<td data-label="부과금액"><input type="number" data-f="chargedAmount" value="'+(row.chargedAmount||'')+'" min="0"></td>' +
+    '<td data-label="미납연체료"><input type="number" data-f="overdueFee" value="'+(row.overdueFee||'')+'" min="0"></td>' +
+    '<td data-label="미납금액(자동계산)"><input type="number" data-f="unpaidAmount" value="'+((Number(row.chargedAmount)||0)+(Number(row.overdueFee)||0))+'" readonly tabindex="-1"></td>' +
+    '<td data-label="조치 및 납부계획"><input type="text" data-f="actionPlan" value="'+escapeHtml(row.actionPlan||'')+'"></td>' +
+    '<td data-label=""><button type="button" class="rpt-btn rpt-btn--danger-outline rpt-btn--small act-remove-row">이 세대 삭제</button></td>';
   tbody.appendChild(tr);
 }
 
@@ -537,10 +579,10 @@ function buildReportHtml(siteName, report){
   return '<div class="report-page">' +
     '<h1>사업소 장기미납세대 현황</h1>' +
     '<div class="report-meta"><span>사업소: '+escapeHtml(siteName||'')+'</span><span>기준일: '+escapeHtml(report.baseDate||'')+'</span></div>' +
-    '<table class="report-table"><thead><tr><th>호실</th><th>업체명</th><th>미납개월(총)</th><th>부과금액</th><th>미납연체료</th><th>미납금액</th><th>조치 및 납부계획</th></tr></thead>' +
+    '<div class="report-table-wrap"><table class="report-table"><thead><tr><th>호실</th><th>업체명</th><th>미납개월(총)</th><th>부과금액</th><th>미납연체료</th><th>미납금액</th><th>조치 및 납부계획</th></tr></thead>' +
     '<tbody>'+rows+'</tbody>' +
     '<tfoot><tr><td colspan="3">합계</td><td>'+fmtNum(report.totals.chargedAmount)+'</td><td>'+fmtNum(report.totals.overdueFee)+'</td><td>'+fmtNum(report.totals.unpaidAmount)+'</td><td></td></tr></tfoot>' +
-    '</table>' +
+    '</table></div>' +
     (report.note ? '<p><strong>본사 참고보고 사항:</strong><br>'+escapeHtml(report.note).replace(/\n/g,'<br>')+'</p>' : '') +
   '</div>';
 }
